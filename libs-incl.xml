@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!-- declares the libraries needed to build quercus-ldap -->
+<project name="library-dependencies">
+  <fileset dir="${libs.dir}/" id="quercus-ldap.libs">
+    <include name="quercus.jar"/>
+    <include name="junit-4.3.jar"/>
+    <include name="resin-util.jar"/>
+  </fileset>
+</project>

@@ -1,0 +1,8 @@
+# Properties used to run unit tests against an LDAP directory.
+
+# Path to OpenLDAP slapd binary that will be started for tests.
+slapd_path = /opt/local/libexec/slapd
+
+# TCP port for slapd to listen on. Nothing can be using this port when running tests, but chances
+# are if you grab some high numbered one nothing will be using it.
+slapd_port = 60389

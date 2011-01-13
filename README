@@ -1,0 +1,22 @@
+This library provides an (incomplete) implementation of PHP 5's LDAP functions for use with the
+Quercus Java implementation of PHP 5. See http://quercus.caucho.com
+
+To use this library, build quercus-ldap.jar (see below) and place it in the WEB-INF/lib directory of
+your web app, or your application server's shared library directory.
+
+Compiling:
+You will need Apache Ant (tested with 1.7.0) and a Java 1.5 compiler. If you wish to run the unit
+tests, you will also need OpenLDAP on your system and to set up a test.properties file. "ant test"
+will run the unit tests, and "ant dist" will create dist/quercus-ldap.jar.
+
+Copyright (c) 2007 Three Rings Design, Inc.
+All rights reserved.
+
+The quercus-ldap source code is provided under version 2 of the GNU General Public License, a copy
+of which can be found in the LICENSE file.
+
+Other software included are copyright their authors, and provided under the following licenses:
+
+lib/junit-4.3.jar: Common Public License Version 1.0 http://www.opensource.org/licenses/cpl1.0.php
+lib/quercus.jar and lib/resin-util.jar: GNU General Public License Version 2
+Various schema files in test/openldap/schema: OpenLDAP License http://www.OpenLDAP.org/license.html

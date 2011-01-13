@@ -1,0 +1,88 @@
+# example.com
+dn: dc=example,dc=com
+dc: example
+o: Test LDAP Directory
+objectClass: dcObject
+objectClass: organization
+objectClass: top
+
+# People, example.com
+dn: ou=People,dc=example,dc=com
+ou: People
+objectClass: top
+objectClass: organizationalUnit
+
+# Groups, example.com
+dn: ou=Groups,dc=example,dc=com
+ou: Groups
+objectClass: top
+objectClass: organizationalUnit
+
+# john, Groups, example.com
+dn: cn=john,ou=Groups,dc=example,dc=com
+cn: john
+objectClass: top
+objectClass: posixGroup
+objectClass: namedObject
+gidNumber: 10001
+
+# sally, Groups, example.com
+dn: cn=sally,ou=Groups,dc=example,dc=com
+cn: sally
+objectClass: top
+objectClass: posixGroup
+objectClass: namedObject
+gidNumber: 10002
+
+# developers, Groups, example.com
+dn: cn=developers,ou=Groups,dc=example,dc=com
+cn: developers
+uniqueMember: uid=john,ou=People,dc=example,dc=com
+uniqueMember: uid=sally,ou=People,dc=example,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+
+# administrators, Groups, example.com
+dn: cn=administrators,ou=Groups,dc=example,dc=com
+cn: administrators
+uniqueMember: uid=sally,ou=People,dc=example,dc=com
+objectClass: top
+objectClass: groupOfUniqueNames
+
+# john, People, example.com
+dn: uid=john,ou=People,dc=example,dc=com
+uid: john
+givenName: John
+sn: Doe 
+cn: John Doe
+mail: john@example.com
+mail: johnalias@example.com
+description: John the Example Person
+loginShell: /bin/tcsh
+uidNumber: 10001
+gidNumber: 10001
+homeDirectory: /home/john
+objectClass: top
+objectClass: person
+objectClass: qmailUser
+objectClass: posixAccount
+objectClass: inetOrgPerson
+
+# sally, People, example.com
+dn: uid=sally,ou=People,dc=example,dc=com
+uid: sally
+givenName: Sally
+sn: Doe
+cn: Sally Doe
+mail: sally@example.com
+mail: sallyalias@example.com
+description: Sally the Example Person
+loginShell: /bin/tcsh
+uidNumber: 10002
+homeDirectory: /home/sally
+gidNumber: 10002
+objectClass: top
+objectClass: person
+objectClass: posixAccount
+objectClass: inetOrgPerson
+objectClass: qmailUser

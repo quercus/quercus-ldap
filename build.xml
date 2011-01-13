@@ -1,0 +1,172 @@
+<?xml version="1.0" standalone="yes"?>
+<!-- build configuration -->
+<project name="quercus-ldap" default="compile" basedir=".">
+
+  <!-- configuration properties -->
+  <property name="app.name"       value="quercus-ldap"/>
+  <property name="deploy.dir"     value="dist"/>
+  <property name="savedoc.dir"    value="docs"/>
+  <property name="openldap.dir"   value="test/openldap"/>
+
+  <!-- derived properties -->
+  <property name="dist.jar"       value="${app.name}.jar"/>
+  <property name="javadoc.home"   value="${deploy.dir}/docs"/>
+
+  <!-- import some targets to enumerate library dependencies -->
+  <property name="libs.dir" value="lib"/>
+  <import file="libs-incl.xml"/>
+
+  <!-- declare our classpath -->
+  <path id="classpath">
+    <pathelement location="${deploy.dir}/classes"/>
+    <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
+  </path>
+
+  <!-- prepares the application directories -->
+  <target name="prepare">
+    <mkdir dir="${deploy.dir}"/>
+    <mkdir dir="${deploy.dir}/classes"/>
+    <mkdir dir="${deploy.dir}/tests"/>
+    <mkdir dir="${deploy.dir}/lib"/>
+    <mkdir dir="${javadoc.home}"/>
+    <copy todir="${deploy.dir}/classes">
+      <fileset dir="src/java" includes="**/*.properties"/>
+    </copy>
+    <copy todir="${deploy.dir}/lib" flatten="true">
+      <fileset refid="${app.name}.libs"/>
+    </copy>
+  </target>
+
+  <!-- cleans out the intermediate build files -->
+  <target name="clean">
+    <delete dir="${deploy.dir}/classes"/>
+    <delete dir="${deploy.dir}/docs"/>
+  </target>
+
+  <!-- cleans out the installed application -->
+  <target name="distclean">
+    <delete dir="${deploy.dir}"/>
+  </target>
+
+  <!-- build the java class files -->
+  <target name="compile" depends="prepare">
+    <javac srcdir="src/java" destdir="${deploy.dir}/classes"
+           debug="on" optimize="${build.optimize}" deprecation="on"
+	   source="1.5" target="1.5">
+      <classpath refid="classpath"/>
+      <compilerarg value="-Xlint:unchecked"/>
+
+      <exclude name="**/*Test.java"/>
+    </javac>
+    <copy todir="${deploy.dir}/classes/META-INF/services">
+      <fileset dir ="src/java/META-INF/services"/>
+    </copy>
+  </target>
+
+  <!-- build and run the unit tests -->
+  <target name="test" depends="compile">
+    <!-- bring in test LDAP server host name and port -->
+    <property file="test.properties"/>
+
+    <!-- build the tests -->
+    <javac srcdir="src/java" destdir="${deploy.dir}/tests"
+           debug="on" optimize="${build.optimize}" deprecation="on"
+           source="1.5" target="1.5" includes="**/*Test.java">
+      <classpath refid="classpath"/>
+      <compilerarg value="-Xlint:unchecked"/>
+    </javac>
+
+    <!-- Set up slapd.conf -->
+    <copy file="${openldap.dir}/slapd.conf.in" tofile="${openldap.dir}/slapd.conf">
+      <filterset>
+        <filter token="LDAP_DIR" value="${basedir}/${openldap.dir}"/>
+      </filterset>
+    </copy>
+
+    <!-- Create OpenLDAP's data directory -->
+    <mkdir dir="${openldap.dir}/openldap-data"/>
+
+    <!-- Set up the data files needed for slapd daemon -->
+    <exec executable="${slapd_path}" failonerror="true">
+      <arg value="-T"/>
+      <arg value="a"/>
+      <arg value="-f"/>
+      <arg value="${openldap.dir}/slapd.conf"/>
+      <arg value="-l"/>
+      <arg value="${openldap.dir}/test.ldif"/>
+    </exec>
+
+    <!-- Now fire up slapd -->
+    <exec executable="${slapd_path}" failonerror="true">
+      <arg value="-h"/>
+      <arg value="ldap://localhost:${slapd_port}"/>
+      <arg value="-f"/>
+      <arg value="${openldap.dir}/slapd.conf"/>
+    </exec>
+
+    <!-- run the tests -->
+    <junit printsummary="yes">
+      <!-- Vend the port for slapd -->
+      <syspropertyset>
+        <propertyref name="slapd_port"/>
+      </syspropertyset>
+
+      <!-- include the tests in our class path -->
+      <classpath>
+        <pathelement location="${deploy.dir}/classes"/>
+        <pathelement location="${deploy.dir}/tests"/>
+        <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
+      </classpath>
+
+      <!-- human output -->
+      <formatter type="brief" usefile="false"/>
+
+      <!-- batch run our tests -->
+      <batchtest>
+        <fileset dir="src/java">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+
+    <!-- Kill and clean up after slapd -->
+    <exec executable="cat" failonerror="true" outputproperty="slapd.pid">
+      <arg value="${openldap.dir}/slapd.pid"/>
+    </exec>
+    <exec executable="kill" failonerror="true">
+      <arg value="${slapd.pid}"/>
+    </exec>
+    <delete file="${openldap.dir}/slapd.conf"/>
+    <delete dir="${openldap.dir}/openldap-data"/>
+  </target>
+
+  <!-- build the javadoc documentation -->
+  <target name="javadoc" depends="prepare">
+    <javadoc sourcepath="src/java"
+             packagenames="com.threerings.*"
+             destdir="${javadoc.home}"
+             additionalparam="-breakiterator"
+             link="http://example.com/">
+      <classpath refid="classpath"/>
+      <link href="http://java.sun.com/j2se/1.5/docs/api/"/>
+    </javadoc>
+  </target>
+
+  <!-- builds the javadocs and stuffs them in a directory where they won't
+       be blown away when we do "clean" next time -->
+  <target name="savedoc" depends="javadoc">
+    <delete dir="${savedoc.dir}/api"/>
+    <copy todir="${savedoc.dir}/api">
+      <fileset dir="${javadoc.home}" includes="**/*"/>
+    </copy>
+  </target>
+
+  <!-- the default target is to rebuild everything -->
+  <target name="all" depends="clean,prepare,compile,javadoc"/>
+
+  <!-- builds our distribution files -->
+  <target name="dist" depends="prepare,compile">
+    <jar destfile="${deploy.dir}/${dist.jar}"
+         basedir="${deploy.dir}/classes"/>
+  </target>
+</project>
